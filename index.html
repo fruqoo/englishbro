@@ -547,6 +547,10 @@ function updateTimerDisplay(){
 const TILT_THRESHOLD = 35; // degrees of tilt (from calibrated neutral) needed to trigger an answer
 const TILT_RELEASE = 12;   // must return within this range of neutral before the next tilt can trigger
 const TILT_MAX = 60;       // degrees mapped to the full travel of the on-screen gauge
+/* A deliberate answer gesture never swings this far from neutral — a jump this big means the phone
+   was physically turned around (or the sensor glitched near vertical), so treat it as a silent
+   re-calibration instead of a wrong answer. */
+const TILT_FLIP_THRESHOLD = 110;
 let huOrientationHandler = null;
 
 function huRequestTiltPermission(){
@@ -578,8 +582,17 @@ function huAttachTilt(){
       clearTimeout(hu.tiltFallbackTimer);
       return;
     }
+    let delta = e.beta - hu.tiltNeutral;
+    while(delta > 180) delta -= 360;
+    while(delta < -180) delta += 360;
+    if(Math.abs(delta) >= TILT_FLIP_THRESHOLD){
+      hu.tiltNeutral = e.beta;
+      hu.tiltLocked = false;
+      huUpdateTiltGauge(0);
+      return;
+    }
     const dir = hu.tiltSwap ? -1 : 1;
-    const adjusted = (e.beta - hu.tiltNeutral) * dir;
+    const adjusted = delta * dir;
     huUpdateTiltGauge(adjusted);
     if(hu.tiltLocked){
       if(Math.abs(adjusted) < TILT_RELEASE) hu.tiltLocked = false;
@@ -1547,8 +1560,9 @@ function huTiltControlsHTML(){
         <div class="marker" id="huTiltMarker"></div>
         <span class="tilt-label bottom">⬇ GOT IT</span>
       </div>
-      <p class="hu-tilt-hint">Tilt the phone <b>down</b> for a correct guess, <b>up</b> to pass.</p>
+      <p class="hu-tilt-hint">Tilt the phone <b>down</b> for a correct guess, <b>up</b> to pass. If the phone gets turned around, it re-calibrates itself automatically — if answers still feel off, tap Recalibrate below.</p>
       <div class="footer-actions" style="margin-top:2px;">
+        <button class="small-link" id="huRecalibrateBtn">↻ Recalibrate</button>
         <button class="small-link" id="huSwapTiltBtn">${hu.tiltSwap ? "Directions swapped ✓ (tap to undo)" : "Feels backwards? Swap directions"}</button>
         <button class="small-link" id="huUseButtonsBtn">Use buttons instead</button>
       </div>
@@ -1972,6 +1986,13 @@ function attachHandlers(){
     if(hitBtn) hitBtn.onclick = ()=> huAnswer(true);
     const passBtn = $("#huPassBtn");
     if(passBtn) passBtn.onclick = ()=> huAnswer(false);
+    const recalBtn = $("#huRecalibrateBtn");
+    if(recalBtn) recalBtn.onclick = ()=>{
+      state.headsup.tiltNeutral = null;
+      state.headsup.tiltLocked = false;
+      huUpdateTiltGauge(0);
+      playSound("click");
+    };
     const swapBtn = $("#huSwapTiltBtn");
     if(swapBtn) swapBtn.onclick = ()=>{ state.headsup.tiltSwap = !state.headsup.tiltSwap; render(); };
     const useButtonsBtn = $("#huUseButtonsBtn");
