@@ -11,6 +11,7 @@
     --team2:#a3454a; --team2-dark:#7c3236;
     --ink:#1f2430; --muted:#667085; --accent:#a9762f; --green:#2f8f57; --green-dark:#1f6e42;
     --purple:#6d5b9e; --purple-dark:#4f4174; --orange:#b17036; --orange-dark:#8a5628;
+    --teal:#1f8a7a; --teal-dark:#146357;
   }
   *{box-sizing:border-box;}
   body{
@@ -149,6 +150,8 @@
   .category-card.cat-people.selected{border-color:var(--purple); background:#f5f3ff;}
   .category-card.cat-animals.selected{border-color:var(--green); background:#f0fdf4;}
   .category-card.cat-objects.selected{border-color:var(--orange); background:#fff7ed;}
+  .category-card.cat-food.selected{border-color:var(--accent); background:#fefaf0;}
+  .category-card.cat-verbs.selected{border-color:var(--teal); background:#f0fdfa;}
   .category-card.cat-mixed.selected{border-color:var(--team1); background:#eff6ff;}
 
   .hu-prep-ring{
@@ -323,14 +326,18 @@ const HU_CATEGORY_META = {
   people:  {label:"People",  icon:"🧑", hint:"jobs & characters"},
   animals: {label:"Animals", icon:"🐾", hint:"wild & pets"},
   objects: {label:"Objects", icon:"📦", hint:"everyday things"},
+  food:    {label:"Food",    icon:"🍎", hint:"meals & snacks"},
+  verbs:   {label:"Verbs",   icon:"🏃", hint:"actions & doing words"},
   mixed:   {label:"Mixed",   icon:"🔀", hint:"a bit of everything"},
 };
 const WHAT_AM_I_WORDS = {
   people: ["Teacher","Doctor","Police Officer","Firefighter","Chef","Barber","Tailor","Painter","Writer","Poet","Musician","Dancer","Clown","Magician","Pirate","Knight","Princess","King","Witch","Fairy","Detective","Spy","Astronaut","Pilot","Captain","Fisherman","Farmer","Carpenter","Electrician","Nurse","Pharmacist","Dentist","Veterinarian","Engineer","Architect","Lawyer","Judge","Journalist","Photographer","Coach","Referee","Waiter","Gardener","Mail Carrier","Driver","Student","Scientist","Superhero","Ninja","Robot"],
   animals: ["Lion","Tiger","Elephant","Giraffe","Monkey","Panda","Koala","Kangaroo","Zebra","Horse","Donkey","Cow","Sheep","Goat","Pig","Rabbit","Squirrel","Hedgehog","Fox","Wolf","Bear","Deer","Crow","Owl","Parrot","Penguin","Flamingo","Eagle","Hawk","Pigeon","Rooster","Chicken","Duck","Goose","Turkey","Whale","Dolphin","Shark","Octopus","Crab","Shrimp","Lobster","Snake","Lizard","Crocodile","Turtle","Frog","Spider","Bee","Ant","Butterfly","Ladybug","Snail","Mouse","Bat","Dog","Cat","Camel"],
   objects: ["Chair","Table","Door","Window","Mirror","Clock","Key","Lock","Bag","Umbrella","Glasses","Hat","Shoe","Sock","Glove","Scarf","Belt","Wallet","Phone","Computer","Keyboard","Television","Remote Control","Radio","Camera","Book","Pencil","Eraser","Ruler","Scissors","Glue","Cup","Plate","Fork","Spoon","Knife","Pot","Pan","Refrigerator","Oven","Washing Machine","Broom","Carpet","Pillow","Blanket","Lamp","Candle","Needle","Thermos","Backpack","Toothbrush"],
+  food: ["Apple","Banana","Orange","Bread","Cheese","Milk","Egg","Rice","Pasta","Pizza","Burger","Sandwich","Soup","Salad","Cake","Cookie","Chocolate","Ice Cream","Honey","Butter","Yogurt","Potato","Tomato","Onion","Carrot","Corn","Grape","Strawberry","Watermelon","Lemon","Chicken","Fish","Sugar","Salt","Coffee","Tea","Juice","Water","Popcorn","Pancake","Donut","Sausage","Noodles","Mushroom","Cucumber","Peach"],
+  verbs: ["Run","Walk","Jump","Swim","Fly","Read","Write","Sing","Dance","Cook","Eat","Drink","Sleep","Laugh","Cry","Smile","Talk","Listen","Watch","Play","Study","Drive","Ride","Climb","Fall","Catch","Throw","Kick","Push","Pull","Open","Close","Clean","Wash","Cut","Draw","Paint","Build","Break","Fix","Carry","Pour","Mix","Bake","Hunt","Shop"],
 };
-WHAT_AM_I_WORDS.mixed = [...WHAT_AM_I_WORDS.people, ...WHAT_AM_I_WORDS.animals, ...WHAT_AM_I_WORDS.objects];
+WHAT_AM_I_WORDS.mixed = [...WHAT_AM_I_WORDS.people, ...WHAT_AM_I_WORDS.animals, ...WHAT_AM_I_WORDS.objects, ...WHAT_AM_I_WORDS.food, ...WHAT_AM_I_WORDS.verbs];
 /* ---------- Simon Says mode data (A0-A1 level, easy + a bit more challenging mixed) ----------
    Classroom-friendly: no floor-touching, jumping, or anything needing open space — desk/seat safe. */
 const SIMON_PHYSICAL = [
@@ -347,6 +354,12 @@ const SIMON_PHYSICAL = [
   "clap your hands three times","touch your head then sit down","touch your chin then smile",
   "stand up then sit down","cross your arms then shake your head",
   "raise your left hand and wiggle your fingers","touch your shoulder then wave"
+];
+/* Short, familiar A1 vocabulary — good for spelling out loud letter by letter. */
+const SIMON_SPELL_WORDS = [
+  "Cat","Dog","Sun","Book","Red","Blue","Pen","Cup","Hat","Box",
+  "Bus","Bed","Egg","Fish","Milk","Rain","Star","Moon","Tree","Door",
+  "Chair","Table","Apple","Water","House","Mouse","Phone","Clock","Shoes","Shirt"
 ];
 /* Tense-restricted to Present Simple, Present Continuous, and Past Continuous only
    (no modals, no future, no simple past, no present perfect) — A1 level. */
@@ -436,6 +449,45 @@ const SIMON_PHRASES = [
   {level:"hard", tr:"Yağmur yağarken parkta yürüyorduk.", en:"We were walking in the park while it was raining."},
   {level:"hard", tr:"Korku filmi izlemem çünkü çok korkutucu.", en:"I don't watch horror movies because they are too scary."},
   {level:"hard", tr:"Ben ödevimi yaparken kız kardeşim çizgi film izliyordu.", en:"While I was doing my homework, my sister was watching cartoons."},
+];
+
+/* ---------- Taboo mode data ---------- */
+const TABOO_WORDS = [
+  {word:"Pizza", taboo:["Cheese","Italy","Round","Slice","Oven"]},
+  {word:"School", taboo:["Teacher","Student","Class","Book","Learn"]},
+  {word:"Doctor", taboo:["Hospital","Sick","Nurse","Medicine","Patient"]},
+  {word:"Elephant", taboo:["Big","Trunk","Gray","Africa","Zoo"]},
+  {word:"Birthday", taboo:["Cake","Party","Candles","Gift","Age"]},
+  {word:"Beach", taboo:["Sand","Sea","Sun","Swim","Ocean"]},
+  {word:"Football", taboo:["Ball","Goal","Kick","Player","Field"]},
+  {word:"Umbrella", taboo:["Rain","Open","Wet","Handle","Cover"]},
+  {word:"Computer", taboo:["Screen","Keyboard","Internet","Mouse","Type"]},
+  {word:"Winter", taboo:["Cold","Snow","Season","Ice","Christmas"]},
+  {word:"Airplane", taboo:["Fly","Sky","Pilot","Wings","Airport"]},
+  {word:"Breakfast", taboo:["Morning","Eat","Eggs","Food","Meal"]},
+  {word:"Library", taboo:["Books","Quiet","Read","Shelf","Borrow"]},
+  {word:"Rainbow", taboo:["Colors","Sky","Rain","Sun","Arc"]},
+  {word:"Bicycle", taboo:["Wheels","Ride","Pedal","Two","Road"]},
+  {word:"Camera", taboo:["Photo","Picture","Click","Lens","Smile"]},
+  {word:"Guitar", taboo:["Music","String","Play","Instrument","Sound"]},
+  {word:"Waiter", taboo:["Restaurant","Food","Order","Table","Menu"]},
+  {word:"Farmer", taboo:["Farm","Animals","Field","Crops","Village"]},
+  {word:"Snowman", taboo:["Snow","Winter","Carrot","Cold","Build"]},
+  {word:"Kitchen", taboo:["Cook","Food","Stove","House","Room"]},
+  {word:"Supermarket", taboo:["Shop","Buy","Food","Cart","Money"]},
+  {word:"Toothbrush", taboo:["Teeth","Clean","Brush","Mouth","Bathroom"]},
+  {word:"Firefighter", taboo:["Fire","Truck","Hero","Water","Rescue"]},
+  {word:"Butterfly", taboo:["Wings","Fly","Colorful","Insect","Flower"]},
+  {word:"Mountain", taboo:["High","Climb","Rock","Snow","Hill"]},
+  {word:"Kangaroo", taboo:["Jump","Australia","Pouch","Baby","Animal"]},
+  {word:"Sandwich", taboo:["Bread","Food","Lunch","Cheese","Slice"]},
+  {word:"Alarm Clock", taboo:["Wake","Time","Ring","Morning","Sound"]},
+  {word:"Swimming Pool", taboo:["Water","Swim","Summer","Dive","Blue"]},
+  {word:"Postman", taboo:["Letter","Mail","Deliver","Bag","House"]},
+  {word:"Ice Cream", taboo:["Cold","Sweet","Cone","Summer","Scoop"]},
+  {word:"Spider", taboo:["Web","Legs","Insect","Bug","Crawl"]},
+  {word:"Traffic Light", taboo:["Red","Green","Street","Stop","Car"]},
+  {word:"Waterfall", taboo:["Water","Fall","River","Mountain","Nature"]},
 ];
 
 function shuffle(arr){
@@ -646,16 +698,99 @@ function huEndRound(){
   render();
 }
 
+/* ---------- Taboo mode logic ---------- */
+let tabooTimerInterval = null;
+let tabooPrepInterval = null;
+function tabooClearTimer(){ if(tabooTimerInterval){ clearInterval(tabooTimerInterval); tabooTimerInterval = null; } }
+function tabooClearPrep(){ if(tabooPrepInterval){ clearInterval(tabooPrepInterval); tabooPrepInterval = null; } }
+
+function tabooNextCard(){
+  const tb = state.taboo;
+  if(tb.poolIdx >= tb.pool.length){
+    tb.pool = shuffle(TABOO_WORDS);
+    tb.poolIdx = 0;
+  }
+  tb.currentCard = tb.pool[tb.poolIdx++];
+}
+
+function tabooUpdateTimerDisplay(){
+  const tb = state.taboo;
+  const ring = document.getElementById("tabooTimerRing");
+  const num = document.getElementById("tabooTimerNum");
+  if(!ring || !num) return;
+  num.textContent = tb.timeLeft;
+  ring.style.setProperty("--tpct", Math.max(0, (tb.timeLeft/tb.duration)*100));
+  ring.classList.toggle("low", tb.timeLeft<=10);
+}
+
+function tabooTick(){
+  const tb = state.taboo;
+  tb.timeLeft--;
+  tabooUpdateTimerDisplay();
+  if(tb.timeLeft<=0){
+    tabooClearTimer();
+    tabooEndRound();
+  }
+}
+
+function tabooRunPrep(){
+  tabooClearPrep();
+  tabooPrepInterval = setInterval(()=>{
+    state.taboo.prepCount--;
+    if(state.taboo.prepCount<=0){
+      tabooClearPrep();
+      tabooStartRound();
+      return;
+    }
+    render();
+  }, 1000);
+}
+
+function tabooStartRound(){
+  const tb = state.taboo;
+  tb.pool = shuffle(TABOO_WORDS);
+  tb.poolIdx = 0;
+  tb.score = 0;
+  tb.hits = [];
+  tb.misses = [];
+  tb.timeLeft = tb.duration;
+  tb.prepCount = null;
+  tabooNextCard();
+  state.screen = "tabooGame";
+  render();
+  tabooClearTimer();
+  tabooTimerInterval = setInterval(tabooTick, 1000);
+}
+
+function tabooAnswer(correct){
+  const tb = state.taboo;
+  const w = tb.currentCard.word;
+  if(correct){
+    tb.score++;
+    tb.hits.push(w);
+    playSound("correct");
+  } else {
+    tb.misses.push(w);
+    playSound("wrong");
+  }
+  if(tb.timeLeft > 0){ tabooNextCard(); render(); }
+}
+
+function tabooEndRound(){
+  state.screen = "tabooResults";
+  render();
+}
+
 /* ---------- Simon Says mode logic ---------- */
 let simonTimerInterval = null;
 function simonClearTimer(){ if(simonTimerInterval){ clearInterval(simonTimerInterval); simonTimerInterval = null; } }
 
 function simonAlivePlayers(){ return state.simon.players.filter(p=>p.alive); }
 
-const KIND_ICON = {physical:"🏃", say:"🗣️", translate:"🔄"};
+const KIND_ICON = {physical:"🏃", say:"🗣️", translate:"🔄", spell:"🔤", math:"🔢"};
 
 function simonBuildCommand(){
-  const kind = ["physical","say","translate"][Math.floor(Math.random()*3)];
+  const kind = ["physical","say","translate","spell","math"][Math.floor(Math.random()*5)];
   const round = state.simon.round || 1;
   /* trap chance climbs from ~22% to 50% as rounds go on — the further you get, the riskier it gets */
   const trapChance = Math.min(0.5, 0.22 + round*0.018);
@@ -672,11 +807,26 @@ function simonBuildCommand(){
     mainText = simonSays ? `${icon} Simon Says: Say this in English:` : `${icon} Say this in English:`;
     sub = `"${pair.tr}"`;
     answerText = pair.en;
-  } else {
+  } else if(kind==="translate"){
     const pair = SIMON_PHRASES[Math.floor(Math.random()*SIMON_PHRASES.length)];
     mainText = simonSays ? `${icon} Simon Says: Translate this to Turkish:` : `${icon} Translate this to Turkish:`;
     sub = `"${pair.en}"`;
     answerText = pair.tr;
+  } else if(kind==="spell"){
+    const word = SIMON_SPELL_WORDS[Math.floor(Math.random()*SIMON_SPELL_WORDS.length)];
+    mainText = simonSays ? `${icon} Simon Says: Spell this word out loud:` : `${icon} Spell this word out loud:`;
+    sub = `"${word.toUpperCase()}"`;
+    answerText = word.toUpperCase().split("").join("-");
+  } else {
+    const a = 1 + Math.floor(Math.random()*12);
+    const b = 1 + Math.floor(Math.random()*12);
+    const isAdd = Math.random() < 0.5;
+    const hi = Math.max(a,b), lo = Math.min(a,b);
+    const result = isAdd ? a+b : hi-lo;
+    const exprText = isAdd ? `${a} + ${b}` : `${hi} - ${lo}`;
+    mainText = simonSays ? `${icon} Simon Says: Say the answer in English:` : `${icon} Say the answer in English:`;
+    sub = `"${exprText} = ?"`;
+    answerText = String(result);
   }
   return {kind, simonSays, mainText, sub, answerText};
 }
@@ -917,6 +1067,17 @@ let state = {
     winnerIdx: null,
     lastResult: null,
   },
+  taboo: {
+    duration: 60,
+    pool: [],
+    poolIdx: 0,
+    currentCard: null,
+    score: 0,
+    hits: [],
+    misses: [],
+    timeLeft: 60,
+    prepCount: null,
+  },
 };
 
 function teamOf(n){ return n===1 ? state.team1 : state.team2; }
@@ -929,6 +1090,7 @@ function playerLabel(team){
 /* ---------- Render ---------- */
 const HU_SCREENS = ["huPlatform","huSetup","huReady","huGame","huResults"];
 const SIMON_SCREENS = ["simonSetup","simonGame","simonResults"];
+const TABOO_SCREENS = ["tabooSetup","tabooReady","tabooGame","tabooResults"];
 
 function headerHTML(){
   if(state.screen==="modeSelect"){
@@ -939,6 +1101,9 @@ function headerHTML(){
   }
   if(SIMON_SCREENS.includes(state.screen)){
     return `<h1>Simon Says</h1><div class="subtitle">Only follow a command when it starts with "Simon says"</div>`;
+  }
+  if(TABOO_SCREENS.includes(state.screen)){
+    return `<h1>Taboo</h1><div class="subtitle">Describe the word without saying the banned words</div>`;
   }
   return `<h1>Who Am I?</h1><div class="subtitle">A guessing game for English practice</div>`;
 }
@@ -992,6 +1157,10 @@ function screenHTML(){
     case "simonSetup": return simonSetupScreen();
     case "simonGame": return simonGameScreen();
     case "simonResults": return simonResultsScreen();
+    case "tabooSetup": return tabooSetupScreen();
+    case "tabooReady": return tabooReadyScreen();
+    case "tabooGame": return tabooGameScreen();
+    case "tabooResults": return tabooResultsScreen();
     default: return "";
   }
 }
@@ -1015,6 +1184,11 @@ function modeSelectScreen(){
         <div class="mode-icon">🎯</div>
         <h2>Simon Says</h2>
         <p>Only follow commands that start with "Simon says" — English actions plus Turkish speaking and translation prompts.</p>
+      </div>
+      <div class="mode-card" id="modeTabooBtn">
+        <div class="mode-icon">🚫</div>
+        <h2>Taboo</h2>
+        <p>Describe the word on screen in English without saying it — or any of the banned words listed below it.</p>
       </div>
     </div>
   </div>`;
@@ -1423,6 +1597,87 @@ function huResultsScreen(){
   </div>`;
 }
 
+function tabooSetupScreen(){
+  const tb = state.taboo;
+  return `
+  <div class="card">
+    <button class="small-link" id="backToModesBtn" style="display:block;margin:0 auto 10px;">⟵ Back to Modes</button>
+    <p style="text-align:center;color:var(--muted);margin-top:0;">One player describes the word on screen in English <b>without saying it — or any of the banned words below it</b>. Teammates shout out guesses before time runs out!</p>
+    <p class="panel-title">Round Length</p>
+    <div class="action-row" id="tabooDurationRow">
+      ${[30,60,90].map(sec=>`<button class="btn-${tb.duration===sec?'primary':'gray'}" data-sec="${sec}">${sec} sec</button>`).join("")}
+    </div>
+    <div class="footer-actions">
+      <button class="btn-primary" id="tabooStartSetupBtn">Continue ➜</button>
+    </div>
+  </div>`;
+}
+
+function tabooReadyScreen(){
+  const tb = state.taboo;
+  const counting = tb.prepCount !== null && tb.prepCount !== undefined;
+  return `
+  <div class="card center-card">
+    <h2>${counting ? "Get ready…" : "Ready?"}</h2>
+    <p style="color:var(--muted);">${tb.duration} seconds. One describer holds the device — everyone else guesses out loud.</p>
+    ${counting
+      ? `<div class="hu-prep-ring" style="--ppct:${(tb.prepCount/5)*100};"><div class="inner">${tb.prepCount}</div></div>`
+      : `<button class="btn-primary" id="tabooReadyStartBtn">Start</button>`}
+    <div class="footer-actions" style="margin-top:14px;">
+      <button class="small-link" id="backToModesBtn">⟵ Back to Modes</button>
+    </div>
+  </div>`;
+}
+
+function tabooGameScreen(){
+  const tb = state.taboo;
+  const card = tb.currentCard;
+  const pct = tb.duration ? Math.max(0, (tb.timeLeft/tb.duration)*100) : 100;
+  return `
+  <div class="top-bar" style="grid-template-columns:auto 1fr auto;align-items:center;">
+    <div style="font-weight:800;color:#fff;">🚫 Taboo</div>
+    <div style="text-align:center;font-weight:800;color:#4ade80;">✓ ${tb.score}</div>
+    <div class="hu-timer-ring ${tb.timeLeft<=10?'low':''}" id="tabooTimerRing" style="--tpct:${pct};"><div class="inner" id="tabooTimerNum">${tb.timeLeft}</div></div>
+  </div>
+  <div class="card">
+    <div class="hu-word-stage" style="min-height:auto;margin-bottom:6px;"><div class="hu-word pop" id="tabooWordDisplay">${escapeHtml(card.word)}</div></div>
+    <div class="hu-list-card bad" style="margin:0 auto 18px;max-width:420px;">
+      <h4>Don't say these words</h4>
+      <div class="hu-chip-wrap">${card.taboo.map(w=>`<span class="hu-chip">${escapeHtml(w)}</span>`).join("")}</div>
+    </div>
+    <div class="hu-answer-row">
+      <button class="hu-ans-btn pass" id="tabooPassBtn"><span class="mark">✕</span>Pass</button>
+      <button class="hu-ans-btn hit" id="tabooHitBtn"><span class="mark">✓</span>Got It!</button>
+    </div>
+    <div class="footer-actions" style="margin-top:16px;">
+      <button class="small-link" id="tabooQuitBtn">End Round</button>
+    </div>
+  </div>`;
+}
+
+function tabooResultsScreen(){
+  const tb = state.taboo;
+  return `
+  <div class="card center-card">
+    <h2>Time's Up</h2>
+    <div style="font-size:2.6em;font-weight:800;font-variant-numeric:tabular-nums;">${tb.score} <span style="font-size:.4em;color:var(--muted);font-weight:700;">correct</span></div>
+    <div class="hu-lists">
+      <div class="hu-list-card good">
+        <h4>Got It</h4>
+        <div class="hu-chip-wrap">${tb.hits.length ? tb.hits.map(w=>`<span class="hu-chip">${escapeHtml(w)}</span>`).join("") : `<span style="color:var(--muted);font-size:.85em;">None yet.</span>`}</div>
+      </div>
+      <div class="hu-list-card bad">
+        <h4>Missed</h4>
+        <div class="hu-chip-wrap">${tb.misses.length ? tb.misses.map(w=>`<span class="hu-chip">${escapeHtml(w)}</span>`).join("") : `<span style="color:var(--muted);font-size:.85em;">None — great job!</span>`}</div>
+      </div>
+    </div>
+    <div class="footer-actions">
+      <button class="btn-gray" id="backToModesBtn">Back to Modes</button>
+      <button class="btn-primary" id="tabooPlayAgainBtn">Play Again</button>
+    </div>
+  </div>`;
+}
+
 function simonSetupScreen(){
   const s = state.simon;
   return `
@@ -1539,6 +1794,8 @@ function attachHandlers(){
     huDetachTilt();
     clearTimeout(state.headsup.tiltFallbackTimer);
     simonClearTimer();
+    tabooClearTimer();
+    tabooClearPrep();
     state.screen = "modeSelect";
     render();
   };
@@ -1561,6 +1818,11 @@ function attachHandlers(){
       clearTimeout(state.headsup.tiltFallbackTimer);
       state.screen = "modeSelect";
       render();
+    } else if(action === "quitTaboo"){
+      tabooClearTimer();
+      tabooClearPrep();
+      state.screen = "modeSelect";
+      render();
     } else {
       render();
     }
@@ -1570,6 +1832,7 @@ function attachHandlers(){
     $("#modeWhoBtn").onclick = ()=>{ state.screen = "setup"; render(); };
     $("#modeWhatBtn").onclick = ()=>{ state.screen = "huPlatform"; render(); };
     $("#modeSimonBtn").onclick = ()=>{ state.screen = "simonSetup"; render(); };
+    $("#modeTabooBtn").onclick = ()=>{ state.screen = "tabooSetup"; render(); };
   }
 
   if(state.screen==="simonSetup"){
@@ -1617,6 +1880,46 @@ function attachHandlers(){
     $("#simonPlayAgainBtn").onclick = ()=>{
       state.simon.players.forEach(p=>{ p.alive=true; p.streak=0; });
       simonStartGame();
+    };
+  }
+
+  if(state.screen==="tabooSetup"){
+    $$("#tabooDurationRow button").forEach(btn=>{
+      btn.onclick = ()=>{ state.taboo.duration = Number(btn.dataset.sec); render(); };
+    });
+    $("#tabooStartSetupBtn").onclick = ()=>{
+      state.taboo.timeLeft = state.taboo.duration;
+      state.taboo.prepCount = null;
+      state.screen = "tabooReady";
+      render();
+    };
+  }
+
+  if(state.screen==="tabooReady"){
+    const startBtn = $("#tabooReadyStartBtn");
+    if(startBtn) startBtn.onclick = ()=>{
+      state.taboo.prepCount = 5;
+      render();
+      tabooRunPrep();
+    };
+  }
+
+  if(state.screen==="tabooGame"){
+    const hitBtn = $("#tabooHitBtn");
+    if(hitBtn) hitBtn.onclick = ()=> tabooAnswer(true);
+    const passBtn = $("#tabooPassBtn");
+    if(passBtn) passBtn.onclick = ()=> tabooAnswer(false);
+    $("#tabooQuitBtn").onclick = ()=>{
+      askConfirm("End this round and go back to modes?", "quitTaboo");
+    };
+  }
+
+  if(state.screen==="tabooResults"){
+    $("#tabooPlayAgainBtn").onclick = ()=>{
+      state.taboo.prepCount = null;
+      state.taboo.timeLeft = state.taboo.duration;
+      state.screen = "tabooReady";
+      render();
     };
   }
 
@@ -1869,6 +2172,7 @@ function fullReset(){
   const keepSettings = state.settings;
   const keepHeadsup = state.headsup;
   const keepSimon = state.simon;
+  const keepTaboo = state.taboo;
   state = {
     screen: "setup",
     team1: {name:"Team 1", players:["Player A",""]},
@@ -1882,6 +2186,7 @@ function fullReset(){
     timeLeft: null,
     headsup: keepHeadsup,
     simon: keepSimon,
+    taboo: keepTaboo,
   };
   render();
 }
